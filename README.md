@@ -24,8 +24,8 @@ A lightweight command-line shell implementation written in Go.
 
 1. Clone the repository:
 ```bash
-   git clone https://github.com/jim3/m4z3y5h3ll.git
-   cd m4z3y5h3ll
+   git clone https://github.com/jim3/m4z3y-5h3ll.git
+   cd m4z3y-5h3ll
 ```
 
 2. Run the shell directly:
@@ -36,14 +36,14 @@ go run main.go
 
 3. Or compile and execute the binary:
 ```bash
-go build -o m4z3y5h3ll main.go
-./m4z3y5h3ll
+go build -o m4z3y-5h3ll main.go
+./m4z3y-5h3ll
 ```
 
 ## Usage Example
 
 ```bash
-$ ./m4z3y5h3ll
+$ ./m4z3y-5h3ll
 $ echo Hello, World!
 Hello, World!
 $ type echo
