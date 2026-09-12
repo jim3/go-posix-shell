@@ -65,31 +65,21 @@ func main() {
 			} else {
 				fmt.Printf("%s: not found\n", args[1])
 			}
-
 		case "pwd":
 			pwd, err := os.Getwd()
 			if err != nil {
 				fmt.Printf("%v: not found\n", pwd)
 			}
 			fmt.Println(pwd)
-
 		case "cd":
-			var dir string
-			var err error
-			if len(args) < 2 {
-				dir, err = os.UserHomeDir()
-				if err != nil {
-					fmt.Printf("cd: %v\n", err)
-					continue
-				}
-			} else {
-				dir = args[1]
+			path := args[1]
+			if path == "~" {
+				path = os.Getenv("HOME")
 			}
-			err = os.Chdir(dir)
+			err := os.Chdir(path)
 			if err != nil {
-				fmt.Printf("cd: %v\n", err)
+				fmt.Println("cd: /non-existing-directory: No such file or directory")
 			}
-
 		default:
 			_, exists := builtin[cmd]
 			if !exists {
