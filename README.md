@@ -24,8 +24,8 @@ A lightweight command-line shell implementation written in Go.
 
 1. Clone the repository:
 ```bash
-   git clone https://github.com/jim3/golang-posix-shell.git
-   cd golang-posix-shell
+   git clone https://github.com/jim3/m4z3y-5h3ll.git
+   cd m4z3y-5h3ll
 ```
 
 2. Run the shell directly:
