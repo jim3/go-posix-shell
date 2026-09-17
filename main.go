@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -27,8 +28,8 @@ func main() {
 	reader := bufio.NewReader(os.Stdin)
 	for {
 		fmt.Print("$ ")
+
 		line, err := reader.ReadString('\n')
-		
 		if err != nil {
 			if errors.Is(err, io.EOF) {
 				return
@@ -36,6 +37,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "reading standard input:", err)
 			continue
 		}
+
 		line = strings.TrimSpace(line)
 		if line == "" {
 			continue
@@ -43,28 +45,35 @@ func main() {
 
 		args := strings.Fields(line)
 		cmd := args[0]
+
 		switch cmd {
 		case "exit":
-			os.Exit(0)
-
+			exitCode := 0
+			if len(args) > 1 {
+				if n, err := strconv.Atoi(args[1]); err == nil {
+					exitCode = n
+				}
+			}
+			os.Exit(exitCode)
 		case "echo":
 			fmt.Println(strings.Join(args[1:], " "))
 
 		case "type":
 			if len(args) < 2 {
-				fmt.Println("type: missing argument")
 				continue
 			}
-			if _, ok := builtin[args[1]]; ok {
-				fmt.Println(args[1], "is a shell builtin")
+
+			target := args[1]
+			if _, ok := builtin[target]; ok {
+				fmt.Println(target, "is a shell builtin")
 				continue
 			}
-			if fullPath, ok := execBin(args); ok {
-				fmt.Println(args[1], "is", fullPath)
+
+			if fullPath, ok := findExe(target); ok {
+				fmt.Println(target, "is", fullPath)
 				continue
-			} else {
-				fmt.Printf("%s: not found\n", args[1])
 			}
+			fmt.Printf("%s: not found\n", target)
 		case "pwd":
 			pwd, err := os.Getwd()
 			if err != nil {
@@ -81,35 +90,35 @@ func main() {
 				fmt.Println("cd: /non-existing-directory: No such file or directory")
 			}
 		default:
-			_, exists := builtin[cmd]
-			if !exists {
-				_, err := exec.LookPath(cmd)
-				if err != nil {
-					fmt.Printf("%v: not found\n", cmd)
-				} else {
-					command := exec.Command(cmd, args[1:]...)
-					command.Stdout = os.Stdout
-					command.Stderr = os.Stderr
-					output := command.Run()
-					if output != nil {
-						fmt.Println("Error:", output)
-					}
+			if _, exists := builtin[cmd]; exists {
+				continue
+			}
+			command := exec.Command(cmd, args[1:]...)
+			command.Stdout = os.Stdout
+			command.Stderr = os.Stderr
+			if err := command.Run(); err != nil {
+				if errors.Is(err, exec.ErrNotFound) {
+					fmt.Printf("%s: command not found\n", cmd)
+					continue
 				}
+
+				if _, lookPathErr := exec.LookPath(cmd); lookPathErr != nil {
+					fmt.Printf("%s: command not found\n", cmd)
+					continue
+				}
+
+				fmt.Fprintln(os.Stderr, err)
 			}
 		}
 	}
 }
 
-func execBin(args []string) (string, bool) {
-	if len(args) < 2 {
-		return "", false
-	}
-
-	exe := args[1]
+func findExe(exe string) (string, bool) {
 	for _, v := range filepath.SplitList(os.Getenv("PATH")) {
 		filePath := filepath.Join(v, exe)
+
 		info, err := os.Stat(filePath)
-		
+
 		if err == nil && !info.IsDir() && info.Mode().Perm()&0o111 != 0 {
 			return filePath, true
 		}
